@@ -36,17 +36,14 @@ export class UserController {
   @UseGuards(AuthGuard)
   @Get('user')
   findMe(@Req() req) {
-    let userId: string = req.userId;
+    const userId: string = req.userId;
     return this.userService.findById(userId);
   }
 
   @UseGuards(AuthGuard)
   @Patch('user')
-  update(
-    @Req() req,
-    @Body() updateUserDto: UpdateUserDto,
-  ) {
-    let userId: string = req.userId;
+  update(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+    const userId: string = req.userId;
     return this.userService.update(userId, updateUserDto);
   }
 

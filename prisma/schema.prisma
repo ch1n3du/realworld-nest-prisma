@@ -11,12 +11,66 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(uuid())
-  username  String   @unique
+  id        String    @id @default(uuid())
+  username  String    @unique
   bio       String?
-  email     String   @unique
+  email     String    @unique
   image     String?
   password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  followers Follows[] @relation("following")
+  following Follows[] @relation("follower")
+  Article   Article[]
+  Comment   Comment[]
+}
+
+model Article {
+  id              String         @id @default(uuid())
+  author          User           @relation(fields: [authorId], references: [id])
+  authorId        String
+  title           String
+  description     String
+  body            String
+  comments        Comment[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  favorited       Boolean
+  favouritesCount Int
+  tagList         ArticleToTag[]
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  body      String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  author    User     @relation(fields: [authorId], references: [username])
+  authorId  String
+  Article   Article? @relation(fields: [articleId], references: [id])
+  articleId String?
+}
+
+model Tag {
+  id       String         @id @default(uuid())
+  name     String
+  articles ArticleToTag[]
+}
+
+model ArticleToTag {
+  article    Article  @relation(fields: [articleId], references: [id])
+  articleId  String
+  tag        Tag      @relation(fields: [tagId], references: [id])
+  tagId      String
+  assignedAt DateTime @default(now())
+
+  @@id([articleId, tagId])
+}
+
+model Follows {
+  follower   User   @relation("follower", fields: [followerId], references: [username])
+  followerId String
+  followed   User   @relation("following", fields: [followedId], references: [username])
+  followedId String
+
+  @@id([followerId, followedId])
 }

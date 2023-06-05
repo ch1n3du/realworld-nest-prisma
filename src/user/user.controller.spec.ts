@@ -3,7 +3,8 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 
 describe('UserController', () => {
-  let controller: UserController;
+  let userController: UserController;
+  let userService: UserService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -11,10 +12,27 @@ describe('UserController', () => {
       providers: [UserService],
     }).compile();
 
-    controller = module.get<UserController>(UserController);
+    userService = module.get<UserService>(UserService);
+    userController = module.get<UserController>(UserController);
   });
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(userController).toBeDefined();
+  });
+
+  it('Register user works', async () => {
+    const randoEmail = 'rando@gmail.com';
+    const randoUsername = 'rando_username';
+    const randoPassword = 'rando_password';
+
+    userController.create({
+      username: randoUsername,
+      email: randoEmail,
+      password: randoPassword,
+    });
+
+    // expect(user).toEqual({
+    //   user: {},
+    // });
   });
 });
