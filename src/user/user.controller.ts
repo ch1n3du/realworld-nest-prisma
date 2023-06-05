@@ -8,6 +8,7 @@ import {
   Delete,
   UsePipes,
   UseGuards,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -16,7 +17,6 @@ import { UserRO } from './user.interface';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { LoginDto } from './dto/login-user.dto';
-import { User } from './user.decorator';
 
 @Controller()
 @UsePipes(ZodValidationPipe)
@@ -35,20 +35,24 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Get('user')
-  findMe() {
-    return this.userService.findMe();
+  findMe(@Req() req) {
+    let userId: string = req.userId;
+    return this.userService.findById(userId);
   }
 
+  @UseGuards(AuthGuard)
   @Patch('user')
   update(
-    @User('username') username: string,
+    @Req() req,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.update(+id, updateUserDto);
+    let userId: string = req.userId;
+    return this.userService.update(userId, updateUserDto);
   }
 
+  @UseGuards(AuthGuard)
   @Delete('user')
   remove(@Param('') id: string) {
-    return this.userService.remove(+id);
+    return this.userService.remove(id);
   }
 }

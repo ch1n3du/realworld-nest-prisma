@@ -7,4 +7,4 @@ const CreateUserSchema = z.object({
   password: z.string(),
 });
 
-export class CreateUserDto extends createZodDto(RegisterUserSchema) {}
+export class CreateUserDto extends createZodDto(CreateUserSchema) {}
