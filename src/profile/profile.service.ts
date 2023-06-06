@@ -1,6 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
-import { NotFoundError } from 'rxjs';
 import { DbService } from 'src/db/db.service';
 import { extractProfileData, ProfileRO } from './profile.interface';
 
@@ -38,19 +36,16 @@ export class ProfileService {
       return this.findByUsername(userId, username);
     }
 
-    const followed = await this.dbService.follows.create({
+    const { followed } = await this.dbService.follows.create({
       data: {
         followerId: userId,
         followedId: profileId,
       },
       select: {
-        followed: true,
+        followed: { select: SelectProfile },
       },
     });
-    const profileData = extractProfileData({
-      ...followed.followed,
-      following,
-    });
+    const profileData = { following: following, ...followed };
 
     return { profile: profileData };
   }

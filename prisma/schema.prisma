@@ -11,33 +11,52 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  username  String    @unique
+  id        String      @id @default(uuid())
+  username  String      @unique
   bio       String?
-  email     String    @unique
+  email     String      @unique
   image     String?
   password  String
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  followers Follows[] @relation("following")
-  following Follows[] @relation("follower")
-  Article   Article[]
-  Comment   Comment[]
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  followers Follows[]   @relation("following")
+  following Follows[]   @relation("follower")
+  articles  Article[]
+  comments  Comment[]
+  favorites Favorites[]
+}
+
+model Follows {
+  follower   User   @relation("follower", fields: [followerId], references: [username])
+  followerId String
+  followed   User   @relation("following", fields: [followedId], references: [username])
+  followedId String
+
+  @@id([followerId, followedId])
 }
 
 model Article {
-  id              String         @id @default(uuid())
-  author          User           @relation(fields: [authorId], references: [id])
-  authorId        String
-  title           String
-  description     String
-  body            String
-  comments        Comment[]
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  favorited       Boolean
-  favouritesCount Int
-  tagList         ArticleToTag[]
+  id          String         @id @default(uuid())
+  slug        String         @unique
+  author      User           @relation(fields: [authorId], references: [id])
+  authorId    String
+  title       String         @unique
+  description String
+  body        String
+  comments    Comment[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  tagList     ArticleToTag[]
+  favorited   Favorites[]
+}
+
+model Favorites {
+  article   Article @relation(fields: [articleId], references: [id])
+  articleId String
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String
+
+  @@id([userId, articleId])
 }
 
 model Comment {
@@ -64,13 +83,4 @@ model ArticleToTag {
   assignedAt DateTime @default(now())
 
   @@id([articleId, tagId])
-}
-
-model Follows {
-  follower   User   @relation("follower", fields: [followerId], references: [username])
-  followerId String
-  followed   User   @relation("following", fields: [followedId], references: [username])
-  followedId String
-
-  @@id([followerId, followedId])
 }
