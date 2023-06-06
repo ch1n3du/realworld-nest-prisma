@@ -17,8 +17,10 @@ import { UserRO } from './user.interface';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { LoginDto } from './dto/login-user.dto';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller()
+@ApiTags('users')
 @UsePipes(ZodValidationPipe)
 export class UserController {
   constructor(private readonly userService: UserService) {}

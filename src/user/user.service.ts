@@ -43,17 +43,23 @@ export class UserService {
         select: SelectUser,
       });
       const token = await this.authService.generateJwt(rawUserData.id);
-      const userData: UserData = extractUserData({ token, ...rawUserData });
+      const userData: UserData = extractUserData({
+        token,
+        ...rawUserData,
+        bio: rawUserData.bio ?? '',
+        image: rawUserData?.image ?? '',
+      });
 
       return { user: userData };
     } catch (error) {
-      const target: string = error.meta.target[0];
       const body: string[] = [];
       if (
         error instanceof PrismaClientKnownRequestError &&
-        error.code === 'P2002' // Unique constraint violation
+        error.code === 'P2002' && // Unique constraint violation
+        error.meta !== undefined
       ) {
-        body.push(`'${target}' must be unique.`);
+        const target: string[] = error.meta['target'] as string[];
+        body.push(`'${target[0]}' must be unique.`);
       }
       throw new HttpException(
         { message: 'Validation Failed', body },
@@ -83,7 +89,12 @@ export class UserService {
       });
     }
     const token = await this.authService.generateJwt(user.id);
-    const userData = extractUserData({ token: token, ...user });
+    const userData = extractUserData({
+      token: token,
+      ...user,
+      bio: user.bio ?? '',
+      image: user.image ?? '',
+    });
 
     return { user: userData };
   }
@@ -95,11 +106,16 @@ export class UserService {
       },
       select: SelectUser,
     });
-    if (rawUserData === undefined) {
+    if (rawUserData === null) {
       throw new NotFoundException('User not found');
     }
     const token = await this.authService.generateJwt(id);
-    const userData = extractUserData({ token, ...rawUserData });
+    const userData = extractUserData({
+      token,
+      ...rawUserData,
+      bio: rawUserData.bio ?? '',
+      image: rawUserData?.image ?? '',
+    });
 
     return { user: userData };
   }
@@ -113,7 +129,12 @@ export class UserService {
       select: SelectUser,
     });
     const token = await this.authService.generateJwt(id);
-    const userData = extractUserData({ token, ...rawUserData });
+    const userData = extractUserData({
+      token,
+      ...rawUserData,
+      bio: rawUserData.bio ?? '',
+      image: rawUserData?.image ?? '',
+    });
 
     return { user: userData };
   }

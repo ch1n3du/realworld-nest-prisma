@@ -7,7 +7,6 @@ import {
   Param,
   Delete,
   Req,
-  Res,
   UseGuards,
   Query,
   ParseIntPipe,
@@ -16,17 +15,19 @@ import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create_article.dto';
 import { UpdateArticleDto } from './dto/update_article.dto';
 import {
-  ArticleRO,
-  CommentRO,
-  MultipleArticlesRO,
-  MultipleCommentsRO,
-  MultipleTagRO,
-} from './article.interface';
+  ArticleResponse,
+  CommentResponse,
+  MultipleArticlesResponse,
+  MultipleCommentsResponse,
+  MultipleTagsResponse,
+} from './dto/responses.dto';
 import { ListArticleParamsDto } from './dto/list_articles.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { FeedArticlesParamsDto } from './dto/feed_articles.dto';
 import { CreateCommentDto } from './dto/create_comment.dto';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('articles')
 @UseGuards(AuthGuard)
 @Controller()
 export class ArticleController {
@@ -36,7 +37,7 @@ export class ArticleController {
   createArticle(
     @Req() req,
     @Body('article') createArticleDto: CreateArticleDto,
-  ): Promise<ArticleRO> {
+  ): Promise<ArticleResponse> {
     const userId: string = req.userId;
     return this.articleService.createArticle(userId, createArticleDto);
   }
@@ -45,7 +46,7 @@ export class ArticleController {
   listArticles(
     @Req() req,
     @Query() listArticlesParams: ListArticleParamsDto,
-  ): Promise<MultipleArticlesRO> {
+  ): Promise<MultipleArticlesResponse> {
     const userId: string = req.userId;
     return this.articleService.listArticles(userId, listArticlesParams);
   }
@@ -54,7 +55,7 @@ export class ArticleController {
   feedArticles(
     @Req() req,
     @Query() feedArticlesParams: FeedArticlesParamsDto,
-  ): Promise<MultipleArticlesRO> {
+  ): Promise<MultipleArticlesResponse> {
     const userId: string = req.userId;
     return this.articleService.feedArticles(userId, feedArticlesParams);
   }
@@ -63,7 +64,7 @@ export class ArticleController {
   findArticleBySlug(
     @Req() req,
     @Param('slug') slug: string,
-  ): Promise<ArticleRO> {
+  ): Promise<ArticleResponse> {
     const userId: string = req.userId;
     return this.articleService.findArticleBySlug(userId, slug);
   }
@@ -73,7 +74,7 @@ export class ArticleController {
     @Req() req,
     @Body('article') updateArticleDto: UpdateArticleDto,
     @Param('slug') slug: string,
-  ): Promise<ArticleRO> {
+  ): Promise<ArticleResponse> {
     const userId: string = req.userId;
     return this.articleService.updateArticle(userId, slug, updateArticleDto);
   }
@@ -89,7 +90,7 @@ export class ArticleController {
     @Req() req,
     @Param('slug') slug: string,
     @Body('comment') createCommentDto: CreateCommentDto,
-  ): Promise<CommentRO> {
+  ): Promise<CommentResponse> {
     const userId: string = req.userId;
     return this.articleService.createComment(userId, createCommentDto);
   }
@@ -98,7 +99,7 @@ export class ArticleController {
   findCommentsByArticle(
     @Req() req,
     @Param('slug') slug: string,
-  ): Promise<MultipleCommentsRO> {
+  ): Promise<MultipleCommentsResponse> {
     const userId: string = req.userId;
     return this.articleService.findCommentsByArticle(userId, slug);
   }
@@ -126,7 +127,7 @@ export class ArticleController {
   }
 
   @Get('tags')
-  getTags(): Promise<MultipleTagRO> {
+  getTags(): Promise<MultipleTagsResponse> {
     return this.articleService.getTags();
   }
 }

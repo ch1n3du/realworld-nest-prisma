@@ -10,7 +10,9 @@ import {
 import { ProfileService } from './profile.service';
 import { ProfileRO } from './profile.interface';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('profile')
 @UseGuards(AuthGuard)
 @Controller('profiles')
 export class ProfileController {

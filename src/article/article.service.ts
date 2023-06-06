@@ -6,14 +6,14 @@ import {
 import { DbService } from 'src/db/db.service';
 import {
   ArticleData,
-  ArticleRO,
+  ArticleResponse,
   AuthorData,
   CommentData,
-  CommentRO,
-  MultipleArticlesRO,
-  MultipleCommentsRO,
-  MultipleTagRO,
-} from './article.interface';
+  CommentResponse,
+  MultipleArticlesResponse,
+  MultipleCommentsResponse,
+  MultipleTagsResponse,
+} from './dto/responses.dto';
 import { CreateArticleDto } from './dto/create_article.dto';
 import { UpdateArticleDto } from './dto/update_article.dto';
 import slug from 'slug';
@@ -28,11 +28,19 @@ export class ArticleService {
   async createArticle(
     userId: string,
     createArticleDto: CreateArticleDto,
-  ): Promise<ArticleRO> {
+  ): Promise<ArticleResponse> {
     const articleSlug: string = slug(createArticleDto.title);
+    const formattedTagList = createArticleDto.tagList.map((tagName) => {
+      return { tagName };
+    });
     await this.dbService.article.create({
       data: {
         ...createArticleDto,
+        tagList: {
+          createMany: {
+            data: formattedTagList,
+          },
+        },
         slug: articleSlug,
         author: { connect: { id: userId } },
       },
@@ -43,7 +51,7 @@ export class ArticleService {
   async listArticles(
     userId: string,
     listArticlesParams: ListArticleParamsDto,
-  ): Promise<MultipleArticlesRO> {
+  ): Promise<MultipleArticlesResponse> {
     const limit = listArticlesParams.limit ?? 20;
     const offset = listArticlesParams.offset ?? 0;
     const favoritedByUserId = listArticlesParams.favorited
@@ -109,14 +117,14 @@ export class ArticleService {
   async feedArticles(
     userId: string,
     feedArticlesParams: FeedArticlesParamsDto,
-  ): Promise<MultipleArticlesRO> {
+  ): Promise<MultipleArticlesResponse> {
     return this.listArticles(userId, feedArticlesParams);
   }
 
   async findArticleBySlug(
     userId: string,
     articleSlug: string,
-  ): Promise<ArticleRO> {
+  ): Promise<ArticleResponse> {
     const rawArticle = await this.dbService.article.findUnique({
       where: { slug: articleSlug },
       select: SelectArticle,
@@ -199,7 +207,7 @@ export class ArticleService {
   async createComment(
     userId: string,
     createCommentDto: CreateCommentDto,
-  ): Promise<CommentRO> {
+  ): Promise<CommentResponse> {
     const comment = await this.dbService.comment.create({
       data: {
         author: {
@@ -223,7 +231,7 @@ export class ArticleService {
   async findCommentsByArticle(
     userId: string,
     articleSlug: string,
-  ): Promise<MultipleCommentsRO> {
+  ): Promise<MultipleCommentsResponse> {
     const articleId = await this.findArticleIdBySlug(articleSlug);
     const rawComments = await this.dbService.comment.findMany({
       where: {
@@ -269,7 +277,7 @@ export class ArticleService {
     });
   }
 
-  async favoriteArticle(userId: string, articleSlug): Promise<ArticleRO> {
+  async favoriteArticle(userId: string, articleSlug): Promise<ArticleResponse> {
     const articleId = await this.findArticleIdBySlug(articleSlug);
     try {
       // Try catch in case of duplicate entries
@@ -283,7 +291,10 @@ export class ArticleService {
     } catch (_) {}
     return this.findArticleBySlug(userId, articleSlug);
   }
-  async unfavoriteArticle(userId: string, articleSlug): Promise<ArticleRO> {
+  async unfavoriteArticle(
+    userId: string,
+    articleSlug,
+  ): Promise<ArticleResponse> {
     const articleId = await this.findArticleIdBySlug(articleSlug);
     this.dbService.favorites.delete({
       where: {
@@ -296,7 +307,7 @@ export class ArticleService {
     return this.findArticleBySlug(userId, articleSlug);
   }
 
-  async getTags(): Promise<MultipleTagRO> {
+  async getTags(): Promise<MultipleTagsResponse> {
     const rawTags = await this.dbService.tag.findMany();
     const tags = rawTags.map(({ name }) => name);
     return { tags };
