@@ -20,18 +20,23 @@ export class ProfileService {
       },
       select: SelectProfile,
     });
-    if (profile === undefined) {
+    if (profile === null) {
       throw new NotFoundException('User not found');
     }
-    const following = await this.checkFollowing(userId, profile.id);
-    const profileData = extractProfileData({ ...profile, following });
+    const following = await this.isFollowing(userId, profile.id);
+    const profileData = extractProfileData({
+      ...profile,
+      following,
+      bio: profile.bio ?? '',
+      image: profile.image ?? '',
+    });
 
     return { profile: profileData };
   }
 
   async followUser(userId: string, username: string): Promise<ProfileRO> {
     const profileId = await this.findIdByUsername(username);
-    const following = await this.checkFollowing(userId, profileId);
+    const following = await this.isFollowing(userId, profileId);
     if (following) {
       return this.findByUsername(userId, username);
     }
@@ -45,7 +50,12 @@ export class ProfileService {
         followed: { select: SelectProfile },
       },
     });
-    const profileData = { following: following, ...followed };
+    const profileData = {
+      ...followed,
+      following: following,
+      bio: followed.bio ?? '',
+      image: followed.image ?? '',
+    };
 
     return { profile: profileData };
   }
@@ -62,18 +72,18 @@ export class ProfileService {
   }
 
   private async findIdByUsername(username: string): Promise<string> {
-    const rawId = await this.dbService.user.findFirst({
+    const rawId = await this.dbService.user.findUnique({
       where: { username },
       select: { id: true },
     });
-    if (rawId === undefined) {
+    if (rawId === null) {
       throw new NotFoundException('User not found');
     }
 
     return rawId.id;
   }
 
-  private async checkFollowing(
+  private async isFollowing(
     followerId: string,
     followedId: string,
   ): Promise<boolean> {
@@ -85,6 +95,6 @@ export class ProfileService {
       select: { followedId: true },
     });
 
-    return follows !== undefined;
+    return follows !== null;
   }
 }

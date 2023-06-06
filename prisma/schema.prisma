@@ -60,9 +60,10 @@ model Favorites {
 }
 
 model Comment {
-  id        String   @id @default(uuid())
+  id        Int      @id @default(autoincrement())
   body      String
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   author    User     @relation(fields: [authorId], references: [username])
   authorId  String
   Article   Article? @relation(fields: [articleId], references: [id])
@@ -70,17 +71,16 @@ model Comment {
 }
 
 model Tag {
-  id       String         @id @default(uuid())
-  name     String
+  name     String         @id
   articles ArticleToTag[]
 }
 
 model ArticleToTag {
   article    Article  @relation(fields: [articleId], references: [id])
   articleId  String
-  tag        Tag      @relation(fields: [tagId], references: [id])
-  tagId      String
+  tag        Tag      @relation(fields: [tagName], references: [name])
+  tagName    String
   assignedAt DateTime @default(now())
 
-  @@id([articleId, tagId])
+  @@id([articleId, tagName])
 }

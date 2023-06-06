@@ -1,11 +1,11 @@
-interface AuthorData {
+export interface AuthorData {
   username: string;
   bio: string;
   image: string;
   following: boolean;
 }
 
-interface ArticleData {
+export interface ArticleData {
   slug: string;
   title: string;
   description: string;
@@ -23,11 +23,11 @@ export interface ArticleRO {
 }
 
 export interface MultipleArticlesRO {
-  articles: ArticleData;
+  articles: ArticleData[];
   articlesCount: number;
 }
 
-interface CommentData {
+export interface CommentData {
   id: number;
   createdAt: Date;
   updatedAt: Date;
@@ -40,5 +40,10 @@ export interface CommentRO {
 }
 
 export interface MultipleCommentsRO {
-  comments: CommentData;
+  comments: CommentData[];
+}
+
+export type Tag = string;
+export interface MultipleTagRO {
+  tags: Tag[];
 }

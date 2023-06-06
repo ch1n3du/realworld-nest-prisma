@@ -24,12 +24,12 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Post('users')
-  create(@Body() registerUserDto: CreateUserDto): Promise<UserRO> {
+  create(@Body('user') registerUserDto: CreateUserDto): Promise<UserRO> {
     return this.userService.create(registerUserDto);
   }
 
   @Post('users/login')
-  login(@Body() loginDto: LoginDto): Promise<UserRO> {
+  login(@Body('user') loginDto: LoginDto): Promise<UserRO> {
     return this.userService.login(loginDto);
   }
 
@@ -42,7 +42,7 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Patch('user')
-  update(@Req() req, @Body() updateUserDto: UpdateUserDto) {
+  update(@Req() req, @Body('user') updateUserDto: UpdateUserDto) {
     const userId: string = req.userId;
     return this.userService.update(userId, updateUserDto);
   }
