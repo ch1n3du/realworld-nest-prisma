@@ -40,7 +40,7 @@ export class ProfileService {
     if (following) {
       return this.findByUsername(userId, username);
     }
-
+    
     const { followed } = await this.dbService.follows.create({
       data: {
         followerId: userId,
@@ -52,7 +52,7 @@ export class ProfileService {
     });
     const profileData = {
       ...followed,
-      following: following,
+      following: true,
       bio: followed.bio ?? '',
       image: followed.image ?? '',
     };
@@ -92,7 +92,7 @@ export class ProfileService {
         followerId,
         followedId,
       },
-      select: { followedId: true },
+      select: { followedId: true, followerId: true },
     });
 
     return follows !== null;

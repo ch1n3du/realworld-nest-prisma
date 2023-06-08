@@ -6,13 +6,13 @@ import {
 import { DbService } from 'src/db/db.service';
 import {
   ArticleData,
-  ArticleResponse,
+  ArticleResponseDto,
   AuthorData,
   CommentData,
-  CommentResponse,
-  MultipleArticlesResponse,
-  MultipleCommentsResponse,
-  MultipleTagsResponse,
+  CommentResponseDto,
+  MultipleArticlesResponseDto,
+  MultipleCommentsResponseDto,
+  MultipleTagsResponseDto,
 } from './dto/responses.dto';
 import { CreateArticleDto } from './dto/create_article.dto';
 import { UpdateArticleDto } from './dto/update_article.dto';
@@ -23,35 +23,44 @@ import { CreateCommentDto } from './dto/create_comment.dto';
 
 @Injectable()
 export class ArticleService {
-  constructor(private readonly dbService: DbService) {}
+  constructor(private readonly dbService: DbService) { }
 
   async createArticle(
     userId: string,
     createArticleDto: CreateArticleDto,
-  ): Promise<ArticleResponse> {
+  ): Promise<ArticleResponseDto> {
     const articleSlug: string = slug(createArticleDto.title);
-    const formattedTagList = createArticleDto.tagList.map((tagName) => {
-      return { tagName };
-    });
-    await this.dbService.article.create({
+
+    await this.createTags(createArticleDto.tagList);
+    let articleTitleExists = await this.dbService.article.findFirst({
+      where: {
+        title: createArticleDto.title
+      }
+    })
+    if (articleTitleExists !== null) {
+      throw new UnauthorizedException({ message: 'Unauthorized', body: ['Article title is already in use'] })
+    }
+    const { id: articleId } = await this.dbService.article.create({
       data: {
         ...createArticleDto,
         tagList: {
           createMany: {
-            data: formattedTagList,
+            data: createArticleDto.tagList.map((tagName) => { return { tagName } }),
           },
         },
         slug: articleSlug,
         author: { connect: { id: userId } },
       },
+      select: { id: true }
     });
+
     return this.findArticleBySlug(userId, articleSlug);
   }
 
   async listArticles(
     userId: string,
     listArticlesParams: ListArticleParamsDto,
-  ): Promise<MultipleArticlesResponse> {
+  ): Promise<MultipleArticlesResponseDto> {
     const limit = listArticlesParams.limit ?? 20;
     const offset = listArticlesParams.offset ?? 0;
     const favoritedByUserId = listArticlesParams.favorited
@@ -117,14 +126,14 @@ export class ArticleService {
   async feedArticles(
     userId: string,
     feedArticlesParams: FeedArticlesParamsDto,
-  ): Promise<MultipleArticlesResponse> {
+  ): Promise<MultipleArticlesResponseDto> {
     return this.listArticles(userId, feedArticlesParams);
   }
 
   async findArticleBySlug(
     userId: string,
     articleSlug: string,
-  ): Promise<ArticleResponse> {
+  ): Promise<ArticleResponseDto> {
     const rawArticle = await this.dbService.article.findUnique({
       where: { slug: articleSlug },
       select: SelectArticle,
@@ -167,18 +176,28 @@ export class ArticleService {
     const newSlug = updateArticleDto.title
       ? slug(updateArticleDto.title)
       : undefined;
-    await this.dbService.article.update({
-      data: {
-        ...updateArticleDto,
-        slug: newSlug,
-      },
-      where: { slug: articleSlug },
-    });
+    if (newSlug !== undefined && await this.slugInUse(newSlug)) {
+      throw new UnauthorizedException({ message: 'Article title is already in use', body: [] })
+    }
+    try {
+      await this.dbService.article.update({
+        data: {
+          ...updateArticleDto,
+          slug: newSlug,
+        },
+        where: { slug: articleSlug },
+      });
+    } catch (_) { }
 
     return this.findArticleBySlug(userId, articleSlug);
   }
 
   async deleteArticle(userId: string, articleSlug: string) {
+    await this.dbService.articleToTag.deleteMany({
+      where: {
+        articleId: await this.findArticleIdBySlug(articleSlug)
+      }
+    })
     const articleRes = await this.dbService.article.delete({
       where: {
         slug: articleSlug,
@@ -206,12 +225,18 @@ export class ArticleService {
 
   async createComment(
     userId: string,
+    slug: string,
     createCommentDto: CreateCommentDto,
-  ): Promise<CommentResponse> {
+  ): Promise<CommentResponseDto> {
     const comment = await this.dbService.comment.create({
       data: {
         author: {
           connect: { id: userId },
+        },
+        article: {
+          connect: {
+            id: await this.findArticleIdBySlug(slug),
+          }
         },
         body: createCommentDto.body,
       },
@@ -231,11 +256,10 @@ export class ArticleService {
   async findCommentsByArticle(
     userId: string,
     articleSlug: string,
-  ): Promise<MultipleCommentsResponse> {
+  ): Promise<MultipleCommentsResponseDto> {
     const articleId = await this.findArticleIdBySlug(articleSlug);
     const rawComments = await this.dbService.comment.findMany({
       where: {
-        authorId: userId,
         articleId: articleId,
       },
       select: SelectComment,
@@ -277,7 +301,7 @@ export class ArticleService {
     });
   }
 
-  async favoriteArticle(userId: string, articleSlug): Promise<ArticleResponse> {
+  async favoriteArticle(userId: string, articleSlug): Promise<ArticleResponseDto> {
     const articleId = await this.findArticleIdBySlug(articleSlug);
     try {
       // Try catch in case of duplicate entries
@@ -288,13 +312,13 @@ export class ArticleService {
           userId: userId,
         },
       });
-    } catch (_) {}
+    } catch (_) { }
     return this.findArticleBySlug(userId, articleSlug);
   }
   async unfavoriteArticle(
     userId: string,
     articleSlug,
-  ): Promise<ArticleResponse> {
+  ): Promise<ArticleResponseDto> {
     const articleId = await this.findArticleIdBySlug(articleSlug);
     this.dbService.favorites.delete({
       where: {
@@ -307,7 +331,7 @@ export class ArticleService {
     return this.findArticleBySlug(userId, articleSlug);
   }
 
-  async getTags(): Promise<MultipleTagsResponse> {
+  async getTags(): Promise<MultipleTagsResponseDto> {
     const rawTags = await this.dbService.tag.findMany();
     const tags = rawTags.map(({ name }) => name);
     return { tags };
@@ -316,6 +340,16 @@ export class ArticleService {
   ///==============================================///
   ///                Helper Methods                ///
   ///==============================================///
+
+  private async createTags(tags: string[]) {
+    try {
+      await this.dbService.tag.createMany({
+        data: tags.map((tagName) => {
+          return { name: tagName };
+        }),
+      });
+    } catch (_) { }
+  }
 
   private async slugInUse(articleSlug: string): Promise<boolean> {
     const exists = await this.dbService.article.findFirst({

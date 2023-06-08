@@ -9,29 +9,30 @@ import {
   UsePipes,
   UseGuards,
   Req,
+  Put,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { UserRO } from './user.interface';
+import { UserResponseDto } from './dto/responses.dto';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { LoginDto } from './dto/login-user.dto';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller()
 @ApiTags('users')
 @UsePipes(ZodValidationPipe)
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService) { }
 
   @Post('users')
-  create(@Body('user') registerUserDto: CreateUserDto): Promise<UserRO> {
+  create(@Body('user') registerUserDto: CreateUserDto): Promise<UserResponseDto> {
     return this.userService.create(registerUserDto);
   }
 
   @Post('users/login')
-  login(@Body('user') loginDto: LoginDto): Promise<UserRO> {
+  login(@Body('user') loginDto: LoginDto): Promise<UserResponseDto> {
     return this.userService.login(loginDto);
   }
 
@@ -43,7 +44,7 @@ export class UserController {
   }
 
   @UseGuards(AuthGuard)
-  @Patch('user')
+  @Put('user')
   update(@Req() req, @Body('user') updateUserDto: UpdateUserDto) {
     const userId: string = req.userId;
     return this.userService.update(userId, updateUserDto);

@@ -1,8 +1,11 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
 
-const saltRounds = 20;
+dotenv.config()
+const JWT_SECRET: string = process.env.JWT_SECRET!;
+const saltRounds = 8;
 @Injectable()
 export class AuthService {
   constructor(private readonly jwtService: JwtService) {}

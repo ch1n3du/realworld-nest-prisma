@@ -10,16 +10,17 @@ import {
   UseGuards,
   Query,
   ParseIntPipe,
+  Put,
 } from '@nestjs/common';
 import { ArticleService } from './article.service';
 import { CreateArticleDto } from './dto/create_article.dto';
 import { UpdateArticleDto } from './dto/update_article.dto';
 import {
-  ArticleResponse,
-  CommentResponse,
-  MultipleArticlesResponse,
-  MultipleCommentsResponse,
-  MultipleTagsResponse,
+  ArticleResponseDto,
+  CommentResponseDto,
+  MultipleArticlesResponseDto,
+  MultipleCommentsResponseDto,
+  MultipleTagsResponseDto,
 } from './dto/responses.dto';
 import { ListArticleParamsDto } from './dto/list_articles.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
@@ -28,16 +29,16 @@ import { CreateCommentDto } from './dto/create_comment.dto';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('articles')
-@UseGuards(AuthGuard)
 @Controller()
 export class ArticleController {
-  constructor(private readonly articleService: ArticleService) {}
+  constructor(private readonly articleService: ArticleService) { }
 
   @Post('articles')
+  @UseGuards(AuthGuard)
   createArticle(
     @Req() req,
     @Body('article') createArticleDto: CreateArticleDto,
-  ): Promise<ArticleResponse> {
+  ): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
     return this.articleService.createArticle(userId, createArticleDto);
   }
@@ -46,16 +47,17 @@ export class ArticleController {
   listArticles(
     @Req() req,
     @Query() listArticlesParams: ListArticleParamsDto,
-  ): Promise<MultipleArticlesResponse> {
+  ): Promise<MultipleArticlesResponseDto> {
     const userId: string = req.userId;
     return this.articleService.listArticles(userId, listArticlesParams);
   }
 
   @Get('articles/feed')
+  @UseGuards(AuthGuard)
   feedArticles(
     @Req() req,
     @Query() feedArticlesParams: FeedArticlesParamsDto,
-  ): Promise<MultipleArticlesResponse> {
+  ): Promise<MultipleArticlesResponseDto> {
     const userId: string = req.userId;
     return this.articleService.feedArticles(userId, feedArticlesParams);
   }
@@ -64,47 +66,51 @@ export class ArticleController {
   findArticleBySlug(
     @Req() req,
     @Param('slug') slug: string,
-  ): Promise<ArticleResponse> {
+  ): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
     return this.articleService.findArticleBySlug(userId, slug);
   }
 
-  @Patch('articles/:slug')
+  @Put('articles/:slug')
+  @UseGuards(AuthGuard)
   updateArticle(
     @Req() req,
     @Body('article') updateArticleDto: UpdateArticleDto,
     @Param('slug') slug: string,
-  ): Promise<ArticleResponse> {
+  ): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
     return this.articleService.updateArticle(userId, slug, updateArticleDto);
   }
 
   @Delete('articles/:slug')
+  @UseGuards(AuthGuard)
   deleteArticle(@Req() req, @Param('slug') slug: string) {
     const userId: string = req.userId;
     return this.articleService.deleteArticle(userId, slug);
   }
 
   @Post('articles/:slug/comments')
+  @UseGuards(AuthGuard)
   createComment(
     @Req() req,
     @Param('slug') slug: string,
     @Body('comment') createCommentDto: CreateCommentDto,
-  ): Promise<CommentResponse> {
+  ): Promise<CommentResponseDto> {
     const userId: string = req.userId;
-    return this.articleService.createComment(userId, createCommentDto);
+    return this.articleService.createComment(userId, slug, createCommentDto);
   }
 
   @Get('articles/:slug/comments')
   findCommentsByArticle(
     @Req() req,
     @Param('slug') slug: string,
-  ): Promise<MultipleCommentsResponse> {
+  ): Promise<MultipleCommentsResponseDto> {
     const userId: string = req.userId;
     return this.articleService.findCommentsByArticle(userId, slug);
   }
 
   @Delete('articles/:slug/comments/:id')
+  @UseGuards(AuthGuard)
   deleteComment(
     @Req() req,
     @Param('slug') slug: string,
@@ -115,19 +121,21 @@ export class ArticleController {
   }
 
   @Post('articles/:slug/favorite')
-  favoriteArticle(@Req() req, @Param('slug') slug: string) {
+  @UseGuards(AuthGuard)
+  favoriteArticle(@Req() req, @Param('slug') slug: string): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
-    this.articleService.favoriteArticle(userId, slug);
+    return this.articleService.favoriteArticle(userId, slug);
   }
 
   @Delete('articles/:slug/favorite')
-  unfavoriteArticle(@Req() req, @Param('slug') slug: string) {
+  @UseGuards(AuthGuard)
+  unfavoriteArticle(@Req() req, @Param('slug') slug: string): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
-    this.articleService.unfavoriteArticle(userId, slug);
+    return this.articleService.unfavoriteArticle(userId, slug);
   }
 
   @Get('tags')
-  getTags(): Promise<MultipleTagsResponse> {
+  getTags(): Promise<MultipleTagsResponseDto> {
     return this.articleService.getTags();
   }
 }

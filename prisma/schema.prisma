@@ -27,9 +27,9 @@ model User {
 }
 
 model Follows {
-  follower   User   @relation("follower", fields: [followerId], references: [username])
+  follower   User   @relation("follower", fields: [followerId], references: [id])
   followerId String
-  followed   User   @relation("following", fields: [followedId], references: [username])
+  followed   User   @relation("following", fields: [followedId], references: [id])
   followedId String
 
   @@id([followerId, followedId])
@@ -64,9 +64,9 @@ model Comment {
   body      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  author    User     @relation(fields: [authorId], references: [username])
+  author    User     @relation(fields: [authorId], references: [id])
   authorId  String
-  Article   Article? @relation(fields: [articleId], references: [id])
+  article   Article? @relation(fields: [articleId], references: [id])
   articleId String?
 }
 

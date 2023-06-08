@@ -28,16 +28,16 @@ const ArticleResponseSchema = z.object({
   article: ArticleDataSchema,
 });
 
-export class ArticleResponse extends createZodDto(ArticleResponseSchema) {}
+export class ArticleResponseDto extends createZodDto(ArticleResponseSchema) { }
 
 const MultipleArticlesResponseSchema = z.object({
   articles: z.array(ArticleDataSchema),
   articlesCount: z.number(),
 });
 
-export class MultipleArticlesResponse extends createZodDto(
+export class MultipleArticlesResponseDto extends createZodDto(
   MultipleArticlesResponseSchema,
-) {}
+) { }
 
 const CommentDataSchema = z.object({
   id: z.number().nonnegative(),
@@ -52,19 +52,19 @@ const CommentResponseSchema = z.object({
   comment: CommentDataSchema,
 });
 
-export class CommentResponse extends createZodDto(CommentResponseSchema) {}
+export class CommentResponseDto extends createZodDto(CommentResponseSchema) { }
 
 const MultipleCommentsResponseSchema = z.object({
   comments: z.array(CommentDataSchema),
 });
 
-export class MultipleCommentsResponse extends createZodDto(
+export class MultipleCommentsResponseDto extends createZodDto(
   MultipleCommentsResponseSchema,
-) {}
+) { }
 
 const MultipleTagsResponseSchema = z.object({
   tags: z.array(z.string()),
 });
-export class MultipleTagsResponse extends createZodDto(
+export class MultipleTagsResponseDto extends createZodDto(
   MultipleTagsResponseSchema,
-) {}
+) { }
