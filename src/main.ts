@@ -6,6 +6,7 @@ import {
 } from '@nestjs/swagger';
 import { patchNestJsSwagger } from 'nestjs-zod';
 import { AppModule } from './app.module';
+patchNestJsSwagger();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,7 +14,7 @@ async function bootstrap() {
 
   patchNestJsSwagger();
   const swaggerOptions: SwaggerDocumentOptions = {
-    deepScanRoutes: true,
+    // deepScanRoutes: true,
   };
   const config = new DocumentBuilder()
     .setTitle('Realworld Backend')

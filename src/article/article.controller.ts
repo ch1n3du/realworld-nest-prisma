@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   Req,
@@ -12,9 +11,8 @@ import {
   ParseIntPipe,
   Put,
 } from '@nestjs/common';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { ArticleService } from './article.service';
-import { CreateArticleDto } from './dto/create_article.dto';
-import { UpdateArticleDto } from './dto/update_article.dto';
 import {
   ArticleResponseDto,
   CommentResponseDto,
@@ -26,7 +24,8 @@ import { ListArticleParamsDto } from './dto/list_articles.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { FeedArticlesParamsDto } from './dto/feed_articles.dto';
 import { CreateCommentDto } from './dto/create_comment.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { CreateArticleDto } from './dto/create_article.dto';
+import { UpdateArticleDto } from './dto/update_article.dto';
 
 @ApiTags('articles')
 @Controller()
@@ -34,16 +33,24 @@ export class ArticleController {
   constructor(private readonly articleService: ArticleService) { }
 
   @Post('articles')
+  @ApiOkResponse({
+    type: ArticleResponseDto,
+    description: 'Returns the article created.'
+  })
   @UseGuards(AuthGuard)
   createArticle(
     @Req() req,
-    @Body('article') createArticleDto: CreateArticleDto,
+    @Body() { article: createArticleDto }: CreateArticleDto,
   ): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
     return this.articleService.createArticle(userId, createArticleDto);
   }
 
   @Get('articles')
+  @ApiOkResponse({
+    type: MultipleArticlesResponseDto,
+    description: 'Returns a list of all articles.'
+  })
   listArticles(
     @Req() req,
     @Query() listArticlesParams: ListArticleParamsDto,
@@ -53,6 +60,10 @@ export class ArticleController {
   }
 
   @Get('articles/feed')
+  @ApiOkResponse({
+    type: MultipleArticlesResponseDto,
+    description: 'Returns a list of all articles for a user\'s feed.'
+  })
   @UseGuards(AuthGuard)
   feedArticles(
     @Req() req,
@@ -63,6 +74,10 @@ export class ArticleController {
   }
 
   @Get('articles/:slug')
+  @ApiOkResponse({
+    type: ArticleResponseDto,
+    description: 'Returns the article that has `slug`.'
+  })
   findArticleBySlug(
     @Req() req,
     @Param('slug') slug: string,
@@ -72,10 +87,14 @@ export class ArticleController {
   }
 
   @Put('articles/:slug')
+  @ApiOkResponse({
+    type: ArticleResponseDto,
+    description: 'Returns the updated article.'
+  })
   @UseGuards(AuthGuard)
   updateArticle(
     @Req() req,
-    @Body('article') updateArticleDto: UpdateArticleDto,
+    @Body() { article: updateArticleDto }: UpdateArticleDto,
     @Param('slug') slug: string,
   ): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
@@ -90,17 +109,25 @@ export class ArticleController {
   }
 
   @Post('articles/:slug/comments')
+  @ApiOkResponse({
+    type: CommentResponseDto,
+    description: 'Returns the created comment.'
+  })
   @UseGuards(AuthGuard)
   createComment(
     @Req() req,
     @Param('slug') slug: string,
-    @Body('comment') createCommentDto: CreateCommentDto,
+    @Body() { comment: createCommentDto }: CreateCommentDto,
   ): Promise<CommentResponseDto> {
     const userId: string = req.userId;
     return this.articleService.createComment(userId, slug, createCommentDto);
   }
 
   @Get('articles/:slug/comments')
+  @ApiOkResponse({
+    type: MultipleCommentsResponseDto,
+    description: 'Returns all the comments for the article whose slug is `slug`.'
+  })
   findCommentsByArticle(
     @Req() req,
     @Param('slug') slug: string,
@@ -110,6 +137,9 @@ export class ArticleController {
   }
 
   @Delete('articles/:slug/comments/:id')
+  @ApiOkResponse({
+    description: 'Deletes the comment with `id`.'
+  })
   @UseGuards(AuthGuard)
   deleteComment(
     @Req() req,
@@ -121,6 +151,10 @@ export class ArticleController {
   }
 
   @Post('articles/:slug/favorite')
+  @ApiOkResponse({
+    type: ArticleResponseDto,
+    description: 'Returns the favorited article.'
+  })
   @UseGuards(AuthGuard)
   favoriteArticle(@Req() req, @Param('slug') slug: string): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
@@ -128,6 +162,10 @@ export class ArticleController {
   }
 
   @Delete('articles/:slug/favorite')
+  @ApiOkResponse({
+    type: ArticleResponseDto,
+    description: 'Returns the unfavorited article.'
+  })
   @UseGuards(AuthGuard)
   unfavoriteArticle(@Req() req, @Param('slug') slug: string): Promise<ArticleResponseDto> {
     const userId: string = req.userId;
@@ -135,6 +173,10 @@ export class ArticleController {
   }
 
   @Get('tags')
+  @ApiOkResponse({
+    type: MultipleTagsResponseDto,
+    description: 'Returns the **all** article tags.'
+  })
   getTags(): Promise<MultipleTagsResponseDto> {
     return this.articleService.getTags();
   }

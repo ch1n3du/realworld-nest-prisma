@@ -8,9 +8,9 @@ import {
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime';
 import { AuthService } from 'src/auth/auth.service';
 import { DbService } from 'src/db/db.service';
-import { LoginDto } from './dto/login-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateUserDto } from './dto/create-user.dto';
+import { LoginData, LoginDto } from './dto/login-user.dto';
+import { UpdateUserData, UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserData, CreateUserDto } from './dto/create-user.dto';
 import { extractUserData, UserData, UserResponseDto } from './dto/responses.dto';
 
 const SelectUser = {
@@ -29,7 +29,7 @@ export class UserService {
     private readonly authService: AuthService,
   ) { }
 
-  async create(registerUserDto: CreateUserDto): Promise<UserResponseDto> {
+  async create(registerUserDto: CreateUserData): Promise<UserResponseDto> {
     const usernameExists = await this.dbService.user.findFirst({
       where: {
         username: registerUserDto.username,
@@ -69,7 +69,7 @@ export class UserService {
     return { user: userData };
   }
 
-  async login({ email, password }: LoginDto): Promise<UserResponseDto> {
+  async login({ email, password }: LoginData): Promise<UserResponseDto> {
     const user = await this.dbService.user.findFirst({
       where: {
         email: email,
@@ -121,7 +121,7 @@ export class UserService {
     return { user: userData };
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserData) {
     try {
       const rawUserData = await this.dbService.user.update({
         where: {

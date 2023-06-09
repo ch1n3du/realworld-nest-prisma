@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UsePipes,
@@ -18,7 +17,7 @@ import { UserResponseDto } from './dto/responses.dto';
 import { ZodValidationPipe } from 'nestjs-zod';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { LoginDto } from './dto/login-user.dto';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 @Controller()
 @ApiTags('users')
@@ -27,31 +26,50 @@ export class UserController {
   constructor(private readonly userService: UserService) { }
 
   @Post('users')
-  create(@Body('user') registerUserDto: CreateUserDto): Promise<UserResponseDto> {
+  @ApiOkResponse({
+    type: UserResponseDto,
+    description: 'Returns the user information of the created user.'
+  })
+  create(@Body() { user: registerUserDto }: CreateUserDto): Promise<UserResponseDto> {
     return this.userService.create(registerUserDto);
   }
 
   @Post('users/login')
-  login(@Body('user') loginDto: LoginDto): Promise<UserResponseDto> {
+  @ApiOkResponse({
+    type: UserResponseDto,
+    description: 'Returns the user information of the logged in user.'
+  })
+  login(@Body() { user: loginDto }: LoginDto): Promise<UserResponseDto> {
     return this.userService.login(loginDto);
   }
 
-  @UseGuards(AuthGuard)
   @Get('user')
-  findMe(@Req() req) {
+  @ApiOkResponse({
+    type: UserResponseDto,
+    description: 'Returns the user information of the requesting user.'
+  })
+  @UseGuards(AuthGuard)
+  findMe(@Req() req): Promise<UserResponseDto> {
     const userId: string = req.userId;
     return this.userService.findById(userId);
   }
 
-  @UseGuards(AuthGuard)
   @Put('user')
-  update(@Req() req, @Body('user') updateUserDto: UpdateUserDto) {
+  @ApiOkResponse({
+    type: UserResponseDto,
+    description: 'Returns the user information of the updated user.'
+  })
+  @UseGuards(AuthGuard)
+  update(@Req() req, @Body() { user: updateUserDto }: UpdateUserDto) {
     const userId: string = req.userId;
     return this.userService.update(userId, updateUserDto);
   }
 
-  @UseGuards(AuthGuard)
   @Delete('user')
+  @ApiOkResponse({
+    description: 'Deletes the requesting user.'
+  })
+  @UseGuards(AuthGuard)
   remove(@Param('') id: string) {
     return this.userService.remove(id);
   }

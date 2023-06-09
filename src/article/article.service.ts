@@ -3,6 +3,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
+import slug from 'slug';
 import { DbService } from 'src/db/db.service';
 import {
   ArticleData,
@@ -14,12 +15,11 @@ import {
   MultipleCommentsResponseDto,
   MultipleTagsResponseDto,
 } from './dto/responses.dto';
-import { CreateArticleDto } from './dto/create_article.dto';
-import { UpdateArticleDto } from './dto/update_article.dto';
-import slug from 'slug';
+import { CreateArticleData } from './dto/create_article.dto';
+import { UpdateArticleData } from './dto/update_article.dto';
+import { CreateCommentData } from './dto/create_comment.dto';
 import { ListArticleParamsDto } from './dto/list_articles.dto';
 import { FeedArticlesParamsDto } from './dto/feed_articles.dto';
-import { CreateCommentDto } from './dto/create_comment.dto';
 
 @Injectable()
 export class ArticleService {
@@ -27,7 +27,7 @@ export class ArticleService {
 
   async createArticle(
     userId: string,
-    createArticleDto: CreateArticleDto,
+    createArticleDto: CreateArticleData,
   ): Promise<ArticleResponseDto> {
     const articleSlug: string = slug(createArticleDto.title);
 
@@ -171,7 +171,7 @@ export class ArticleService {
   async updateArticle(
     userId: string,
     articleSlug: string,
-    updateArticleDto: UpdateArticleDto,
+    updateArticleDto: UpdateArticleData,
   ) {
     const newSlug = updateArticleDto.title
       ? slug(updateArticleDto.title)
@@ -226,7 +226,7 @@ export class ArticleService {
   async createComment(
     userId: string,
     slug: string,
-    createCommentDto: CreateCommentDto,
+    createCommentDto: CreateCommentData,
   ): Promise<CommentResponseDto> {
     const comment = await this.dbService.comment.create({
       data: {

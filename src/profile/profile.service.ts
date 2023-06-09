@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
-import { extractProfileData, ProfileRO } from './profile.interface';
+import { extractProfileData, ProfileResponseDto } from './dto/responses.dto';
 
 const SelectProfile = {
   id: true,
@@ -11,9 +11,9 @@ const SelectProfile = {
 
 @Injectable()
 export class ProfileService {
-  constructor(private readonly dbService: DbService) {}
+  constructor(private readonly dbService: DbService) { }
 
-  async findByUsername(userId: string, username: string): Promise<ProfileRO> {
+  async findByUsername(userId: string, username: string): Promise<ProfileResponseDto> {
     const profile = await this.dbService.user.findFirst({
       where: {
         username: username,
@@ -34,13 +34,13 @@ export class ProfileService {
     return { profile: profileData };
   }
 
-  async followUser(userId: string, username: string): Promise<ProfileRO> {
+  async followUser(userId: string, username: string): Promise<ProfileResponseDto> {
     const profileId = await this.findIdByUsername(username);
     const following = await this.isFollowing(userId, profileId);
     if (following) {
       return this.findByUsername(userId, username);
     }
-    
+
     const { followed } = await this.dbService.follows.create({
       data: {
         followerId: userId,
@@ -60,7 +60,7 @@ export class ProfileService {
     return { profile: profileData };
   }
 
-  async unfollowUser(userId: string, username: string): Promise<ProfileRO> {
+  async unfollowUser(userId: string, username: string): Promise<ProfileResponseDto> {
     const profileId = await this.findIdByUsername(username);
 
     await this.dbService.follows.delete({

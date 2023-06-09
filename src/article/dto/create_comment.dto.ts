@@ -1,8 +1,12 @@
 import { createZodDto } from 'nestjs-zod';
-import { z } from 'nestjs-zod/z';
+import { TypeOf, z } from 'nestjs-zod/z';
 
-const CreateCommentSchema = z.object({
+const CreateCommentDataSchema = z.object({
   body: z.string().nonempty(),
 });
+export type CreateCommentData = TypeOf<typeof CreateCommentDataSchema>
 
-export class CreateCommentDto extends createZodDto(CreateCommentSchema) {}
+const CreateCommentSchema = z.object({
+  comment: CreateCommentDataSchema
+})
+export class CreateCommentDto extends createZodDto(CreateCommentSchema) { }
