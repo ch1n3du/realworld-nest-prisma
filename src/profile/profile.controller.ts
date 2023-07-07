@@ -13,7 +13,6 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
 
 @ApiTags('profile')
-@UseGuards(AuthGuard)
 @Controller('profiles')
 export class ProfileController {
   constructor(private readonly profileService: ProfileService) { }
@@ -31,6 +30,7 @@ export class ProfileController {
     return this.profileService.findByUsername(userId, username);
   }
 
+  @UseGuards(AuthGuard)
   @Post(':username/follow')
   @ApiOkResponse({
     type: ProfileResponseDto,
@@ -44,6 +44,7 @@ export class ProfileController {
     return this.profileService.followUser(userId, username);
   }
 
+  @UseGuards(AuthGuard)
   @Delete(':username/follow')
   @ApiOkResponse({
     type: ProfileResponseDto,
